@@ -8,6 +8,7 @@ import time
 
 HOST = raw_input("Please enter the TCP Server Address: ")
 PORT = int(raw_input("Please enter the TCP Server Port: "))
+Buffer = 1024
 
 while True:
 	message = raw_input("-> ")
@@ -22,7 +23,7 @@ while True:
 		sock.sendall(data + "\n")
 
 		# Receive data from the server and shut down
-		received = sock.recv(1024)
+		received = sock.recv(Buffer)
 	finally:
 		sock.close()
 	print "+-------------------{}---------------------+".format(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))

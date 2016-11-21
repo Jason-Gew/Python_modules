@@ -67,7 +67,7 @@ def advanced_log(level, message, name=''):
 		return True
 
 	else:
-		print ("\n*** Log file does not exists ***\n")
+		print ("\n*** Log file does not exist ***\n")
 		return False
 
 if __name__ == '__main__':

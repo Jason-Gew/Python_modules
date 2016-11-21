@@ -8,26 +8,28 @@ import time
 
 
 response = "Received"
-
+Buff = 1024
 
 class MyTCPHandler(SocketServer.BaseRequestHandler):
 	"""
 	The RequestHandler class for server.
-
 	It is instantiated once per connection to the server, and must
 	override the handle() method to implement communication to the
 	client.
 	"""
 	def handle(self):
 		# self.request is the TCP socket connected to the client,buffer size: 1024
-		self.data = self.request.recv(1024).strip()
+		self.data = self.request.recv(Buff).strip()
 		print "-------------------------------------------------------"
 		print "{} Send:".format(self.client_address[0])
 		print self.data
 		print "[ Received Time:", time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())),"]"+" [Length:"+str(len(self.data))+']'
 		print "-------------------------------------------------------"
 		# Send back the response
-		self.request.sendall(response)
+		if len(self.data) == Buff:
+			self.request.sendall('Reached Maximum Message Size 1024...')
+		else:
+			self.request.sendall(response)
 
 def address_check(ip_address):
 	try:
