@@ -5,16 +5,16 @@
 # Module is produced by Jason/Ge Wu
 # Current Release on Nov/20/2016
 
+import xml.etree.ElementTree as XML_ET
 import json
 import time
-import xml
 import os
 
 class read_config:
 
 	size = 0
 	path = ""
-	status = {}
+	status = ""
 	
 	def __init__(self, file_path):
 		self.path = file_path
@@ -46,6 +46,10 @@ class read_config:
 			print "-> Invalid content or syntax in the config file!\n"
 			info['error'] = "invalid content"
 			return info
+		except KeyError:
+			print "-> Invalid Key Word(s) in JSON File!\n"
+			info['error'] = "invalid json"
+			return info		
 		except:
 			print "-> Unidentified Error! \n"
 			infor['error'] = "unidentified error"
@@ -63,7 +67,7 @@ class read_config:
 			return results
 		else:
 			for i in range(len(keywords)):
-				if keywords[i].isspace():
+				if keywords[i] == '':
 					results['error'] = "invalid keywords"
 					return results
 				elif type(keywords[i]) != type(self.path):
@@ -77,6 +81,7 @@ class read_config:
 			pass
 		else:
 			results['error'] = "invalid path"
+			return results
 
 		try:
 			with open(self.path,'r') as origin:
@@ -84,26 +89,37 @@ class read_config:
 
 			for i in range(len(keywords)):
 				if keywords[i] in temp:
+					print keywords[i]
 					if type(temp[keywords[i]]) == type(temp):
+						print "check 2"
 						for n in range(len(keywords)):
 							if keywords[n] in temp[keywords[i]]:
+								print "check 3:", n
 								if type(temp[keywords[i]][keywords[n]]) == type(temp):
 									for m in range(len(keywords)):
+										print "check 4: ",m
 										if keywords[m] in temp[keywords[i]][keywords[n]]:
 											key_name = keywords[i]+'_'+keywords[n]+'_'+keywords[m]
 											results[key_name]= temp[keywords[i]][keywords[n]][keywords[m]]
 										else:
+											print "check 5"
 											pass
+										#	key_name = keywords[i]+'_'+keywords[n]
+										#	results[key_name] = temp[keywords[i]][keywords[n]]
 								else:
 									key_name = keywords[i]+'_'+keywords[n]
 									results[key_name] = temp[keywords[i]][keywords[n]]
 							else:
-								pass
+								self.status = keywords[i]+" require sub arguments"
+								results['error'] = self.status
 					else:
+						print "check 7"
 						key_name = keywords[i]
 						results[key_name] = temp[keywords[i]]
 				else:
-					results['error'] = "no matches"
+					print "check 8"
+					pass
+				#	results['error'] = "no matches"
 
 		except IOError:
 			print "-> Please Check the Configuration File Path!\n"
@@ -126,7 +142,9 @@ class read_config:
 
 		else:
 			origin.close
+			print "Find Keys: ",results.keys()
 			return results
+
 
 	# Read Plain Text configuration file: each line in the config file
 	# should only contain one type of information. Use '=', ":" to separate key name and content.
@@ -169,14 +187,72 @@ class read_config:
 			origin.close()
 			return info
 
+	# Read XML Configuration File: Must validate the xml first, 
+	# make sure to keep list of data in one sperate element.
+	# This mehtod returns information as Python Dictionary.
+	def read_xml_origin(self):
+		info = {}
+		if self.__check_exist(self.path):
+			pass
+		else:
+			info['error'] = "invalid path"
+
+		try:
+			tree = XML_ET.parse(self.path)
+			root = tree.getroot()
+			print ("XML Root has {} Primary Keys...").format(len(root))
+			self.size = len(root)
+			if self.size == 0:
+				info['error'] = "empty keywords"
+				return info
+			else:
+				pass
+
+			for i in range (len(root)):
+			#	print "No.{} Primary Key: {}".format(i, root[i].tag)
+				if (root[i].text).isspace():
+					sub_size = len(root[i])
+					for t in range (sub_size):
+						temp = []
+					#	print ("Sub Key: {} , Value: {}").format(root[i][t].tag, root[i][t].text)
+						if t == 0 and (t+1) == sub_size:
+							key_name = root[i].tag + '_' + root[i][t].tag
+							info[key_name] = root[i][t].text
+						elif t == 0 and root[i][t].tag != root[i][t+1].tag and (t+1) != sub_size:
+							key_name = root[i].tag + '_' + root[i][t].tag
+							info[key_name] = root[i][t].text            
+						elif t == 0 and root[i][t].tag == root[i][t+1].tag and (t+1) != sub_size:
+							key_name = root[i].tag + '_' + root[i][t].tag
+							temp.append(root[i][t].text)
+							info[key_name]=temp
+						elif t != 0 and root[i][t].tag != root[i][t-1].tag:
+							key_name = root[i].tag + '_' + root[i][t].tag
+							info[key_name] = root[i][t].text
+						elif t != 0 and root[i][t].tag == root[i][t-1].tag:
+							key_name = root[i].tag + '_' + root[i][t].tag
+							info[key_name].append((root[i][t].text))
+						else:
+							pass
+						del temp
+			#	elif (root[i].text).isinstance():
+			#		info['error'] = "invaid structure"
+			 	else:
+					key_name = root[i].tag
+					info[key_name] = root[i].text
+
+		except AttributeError:
+			info['error'] = "invaid attribute"
+
+		else:
+			return info
 
 
 ## Comment below lines if use as independent module
 if __name__ == '__main__':
-	config = "sample_config.json"
+	config = "sample_config.xml"
 	retrieve = {}
-	keywords = ['','obj2','','','','','','','']
+
 	t = read_config(config)
-	retrieve= t.read_json(keywords)
+	retrieve= t.read_xml_origin()
 	print retrieve
 

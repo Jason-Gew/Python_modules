@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<object>
+	<obj1>
+		<key1-1>value 11</key1-1>
+		<key1-2>value 12</key1-2>
+	</obj1>
+	<obj2>
+		<key2>value 2</key2>
+	</obj2>
+	<obj3>value 3</obj3>
+	<obj4>
+		<list>list 4-1</list>
+		<list>list 4-2</list>
+		<list>list 4-3</list>
+	</obj4>
+	<update>
+		<timestamp>2016-11-20 11:18:00</timestamp>
+		<UNIX-timestamp>123456789</UNIX-timestamp>
+	</update>
+</object>
