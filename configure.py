@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # configure.py is for reading basic plain text, json, xml configuration file.
-# Configuration files must follow the basic format:
+# Configuration files must follow the basic format structure:
 # 
 # Module is produced by Jason/Ge Wu
 # Current Release on Nov/20/2016
 
 import xml.etree.ElementTree as XML_ET
+import ConfigParser
 import json
 import time
 import os
@@ -23,17 +24,18 @@ class read_config:
 		if os.path.exists(file_path):
 			return True
 		else:
-			print ("\n*** Log File Does Not Exist ***\n")
+			print ("\n*** File Does Not Exist ***\n")
 			return False
 
-	# This method returns original JSON data in Python Dictionary
-	def read_json_origin(self):
+	# This method reads JSON config file and returns original JSON data in Python Dictionary.
+	def read_raw_json(self):
 		info = {}
 
 		if self.__check_exist(self.path):
 			pass
 		else:
 			info['error'] = "invalid path"
+			return info
 
 		try:
 			with open(self.path,'r') as origin:
@@ -58,6 +60,7 @@ class read_config:
 			return info
 
 	# Passing keywords as Python List, the method returns results as Python Dictionary
+	# - Debugging -
 	def read_json(self, keywords):
 		results = {}
 		temp = {}
@@ -138,7 +141,7 @@ class read_config:
 
 		except:
 			print "-> Unidentified Error! \n"
-			infor['error'] = "unidentified error"
+			results['error'] = "unidentified error"
 
 		else:
 			origin.close
@@ -146,19 +149,19 @@ class read_config:
 			return results
 
 
-	# Read Plain Text configuration file: each line in the config file
-	# should only contain one type of information. Use '=', ":" to separate key name and content.
-	# If using any speical split symboal, please define it in the method.
+	# Read Plain Text config file: each line should only contain one type of information.
+	# Use '=' to distinguish key name with content, ',,' to split multiple elements in a content.
+	# If using any speical identifer, please define and pass it to the method.
 	# This mehtod returns information as Python Dictionary.
-	def read_text_origin(self):
+	def read_raw_text(self, identifer='=', splitter=',,'):
 		info = {}
 		temp = []
-#		split_symbol = ""	# If using special split symbol, please define it here.
+		section = ""
 		if self.__check_exist(self.path):
 			pass
 		else:
 			info['error'] = "invalid path"
-
+			return info
 		try:
 			with open(self.path,'r') as origin:
 				for lines in origin.readlines():
@@ -167,22 +170,40 @@ class read_config:
 			self.size = len(temp)
 
 			for l in range (len(temp)):
-				if '=' in temp[l]:
-					key_index = temp[l].index('=')
-					key_name = temp[l][0:key_index]
-					info[key_name] = temp[l][key_index+1:]
-				elif ":" in temp[l]:
-					key_index = temp[l].index(':')
-					key_name = temp[l][0:key_index]
-					info[key_name] = temp[l][key_index+1:]
+				if '[' in temp[l]:
+					if ']' in temp[l]:
+						section = temp[l][(temp[l].find('[')+1):(temp[l].find(']'))]
+					else:
+						info['error'] = "invalid section"
+				elif temp[l].isspace() or len(temp[l])==0:
+					continue
+
+				elif identifer in temp[l]:
+					key_index = temp[l].index(identifer)
+					if len(section) != 0:
+						key_name = section + '_' + temp[l][0:key_index]
+					else:
+						key_name = temp[l][0:key_index]
+
+					if splitter in temp[l][key_index+1:]:
+						element = temp[l][key_index+1:].split(splitter)
+						info[key_name] = element
+					else:
+						info[key_name] = temp[l][key_index+1:]
 				else:
-					info['error'] = "invalid content in line:"+str(l+1)
+					if'[' not in temp[l] and ']' not in temp[l]:
+						info['error'] = "no identifer in line: "+str(l+1)
+					else:
+						pass
 
 		except IOError:
 			print "-> Please Check the Configuration File Path!\n"
 			info['error'] = "invalid path"
 			return info
-
+		except:
+			print "-> Unidentified Error! \n"
+			info['error'] = "unidentified error"
+			return info
 		else:
 			origin.close()
 			return info
@@ -190,17 +211,18 @@ class read_config:
 	# Read XML Configuration File: Must validate the xml first, 
 	# make sure to keep list of data in one sperate element.
 	# This mehtod returns information as Python Dictionary.
-	def read_xml_origin(self):
+	def read_raw_xml(self):
 		info = {}
 		if self.__check_exist(self.path):
 			pass
 		else:
 			info['error'] = "invalid path"
+			return info
 
 		try:
 			tree = XML_ET.parse(self.path)
 			root = tree.getroot()
-			print ("XML Root has {} Primary Keys...").format(len(root))
+		#	print ("-> XML Root has {} Primary Keys...").format(len(root))
 			self.size = len(root)
 			if self.size == 0:
 				info['error'] = "empty keywords"
@@ -243,16 +265,93 @@ class read_config:
 		except AttributeError:
 			info['error'] = "invaid attribute"
 
+		except:
+			info['error'] = "unexpected error"
+
 		else:
 			return info
 
 
+class update_config:
+
+	path = ""
+	size = 0
+	status = {}
+
+	def __init__(self, file_path):
+		self.path = file_path
+
+	def __check_exist(self, file_path):
+		if os.path.exists(file_path):
+			return True
+		else:
+			print ("\n*** File Does Not Exist ***\n")
+			return False
+
+	# Pass the keywords and content as Python Dictionary, 
+	# Keywords hierarchy must be exact same as defined in config file.
+	# This method only allow update information, does not offer adding keyword(s).
+	def update_json(self, keywords):
+		info = {}
+
+		if self.__check_exist(self.path):
+			pass
+		else:
+			info['error'] = "invalid path"
+			return info
+
+		self.size = len(keywords)
+		if self.size == 0:
+			info['error'] = "empty keywords"
+			return info
+		elif type(keywords) != type(info):
+			info['error'] = "invalid keywords type"
+			return info
+		else:
+			pass
+
+		try:
+			with open(self.path) as origin:
+				info1 = json.load(origin)
+			origin.close()
+
+			info1_keys = set(info1.keys())
+			keywords_keys = set(keywords.keys())
+			if len(keywords_keys - info1_keys) != 0:
+				info['error'] = "additional keywords exist"
+				return info
+			else:
+				pass
+
+
+
+		except IOError:
+			print "-> Please Check the Configuration File Path!\n"
+			info['error'] = "invalid path"
+			return info
+		except ValueError:
+			print "-> Invalid content or syntax in the config file!\n"
+			info['error'] = "invalid content"
+			return info
+		except KeyError:
+			print "-> Invalid Key Word(s) in JSON File!\n"
+			info['error'] = "invalid json"
+			return info		
+		except:
+			print "-> Unidentified Error! \n"
+			infor['error'] = "unidentified error"
+		else:
+			origin.close
+			return info
+
+
+
 ## Comment below lines if use as independent module
 if __name__ == '__main__':
-	config = "sample_config.xml"
+	config_file = "file/sample_config.json"
 	retrieve = {}
 
-	t = read_config(config)
-	retrieve= t.read_xml_origin()
+	t = read_config(config_file)
+	retrieve= t.read_raw_json()
 	print retrieve
 
