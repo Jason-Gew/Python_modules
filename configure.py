@@ -328,7 +328,7 @@ class update_config:
 						pass
 
 			with open(self.path, 'w') as origin:
-				c = json.dump(raw, origin, indent=4, sort_keys=False)
+				json.dump(raw, origin, indent=4, sort_keys=False)
 			self.info['status'] = "success"
 
 		except IOError:
