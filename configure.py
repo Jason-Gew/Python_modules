@@ -28,6 +28,7 @@ class read_config:
 			return False
 
 	# This method reads JSON config file and returns original JSON data in Python Dictionary.
+	# JSON config file should not have more than 2 levels of nested objects.
 	def read_raw_json(self):
 		info = {}
 
@@ -128,21 +129,17 @@ class read_config:
 			print "-> Please Check the Configuration File Path!\n"
 			results['error'] = "invalid path"
 			return results
-
 		except KeyError:
 			print "-> Invalid Key Word(s) in JSON File!\n"
 			results['error'] = "invalid json"
 			return results
-
 		except ValueError:
 			print "-> Invalid content or syntax in the config file!\n"
 			results['error'] = "invalid content"
 			return results
-
 		except:
 			print "-> Unidentified Error! \n"
 			results['error'] = "unidentified error"
-
 		else:
 			origin.close
 			print "Find Keys: ",results.keys()
@@ -264,10 +261,8 @@ class read_config:
 
 		except AttributeError:
 			info['error'] = "invaid attribute"
-
 		except:
 			info['error'] = "unexpected error"
-
 		else:
 			return info
 
@@ -276,7 +271,7 @@ class update_config:
 
 	path = ""
 	size = 0
-	status = {}
+	info = {}
 
 	def __init__(self, file_path):
 		self.path = file_path
@@ -292,58 +287,69 @@ class update_config:
 	# Keywords hierarchy must be exact same as defined in config file.
 	# This method only allow update information, does not offer adding keyword(s).
 	def update_json(self, keywords):
-		info = {}
-
+		self.info = {}
 		if self.__check_exist(self.path):
 			pass
 		else:
-			info['error'] = "invalid path"
-			return info
-
+			self.info['error'] = "invalid path"
+			return self.info
 		self.size = len(keywords)
+
 		if self.size == 0:
-			info['error'] = "empty keywords"
-			return info
-		elif type(keywords) != type(info):
-			info['error'] = "invalid keywords type"
-			return info
+			self.info['error'] = "empty keywords"
+			return self.info
+		elif type(keywords) != type(self.info):
+			self.info['error'] = "invalid keywords type"
+			return self.info
 		else:
 			pass
 
 		try:
-			with open(self.path) as origin:
-				info1 = json.load(origin)
+			with open(self.path, 'r') as origin:
+				raw = json.load(origin)
 			origin.close()
 
-			info1_keys = set(info1.keys())
+			raw_keys = set(raw.keys())
 			keywords_keys = set(keywords.keys())
-			if len(keywords_keys - info1_keys) != 0:
-				info['error'] = "additional keywords exist"
-				return info
+			if len(keywords_keys - raw_keys) != 0:
+				self.info['error'] = "additional keywords exist"
+				return self.info
 			else:
-				pass
+				for k in keywords.keys():
+					if type(keywords[k]) == type(self.info):
+						keywords_keys2 = set(keywords[k].keys())
+						raw_keys2 = set(raw[k].keys())
+						if len(keywords_keys2 - raw_keys2) != 0:
+							self.info['error'] = "additional keywords exist"
+							return self.info
+						else:
+							raw[k].update(keywords[k])
+					else:
+						pass
 
-
+			with open(self.path, 'w') as origin:
+				c = json.dump(raw, origin, indent=4, sort_keys=False)
+			self.info['status'] = "success"
 
 		except IOError:
 			print "-> Please Check the Configuration File Path!\n"
-			info['error'] = "invalid path"
-			return info
+			self.info['error'] = "invalid path"
+			return self.info
 		except ValueError:
 			print "-> Invalid content or syntax in the config file!\n"
-			info['error'] = "invalid content"
-			return info
+			self.info['error'] = "invalid content"
+			return self.info
 		except KeyError:
 			print "-> Invalid Key Word(s) in JSON File!\n"
-			info['error'] = "invalid json"
-			return info		
+			self.info['error'] = "invalid json"
+			return self.info		
 		except:
+			# Make Comment of 'except' for debugging
 			print "-> Unidentified Error! \n"
-			infor['error'] = "unidentified error"
+			self.info['error'] = "unidentified error"
 		else:
 			origin.close
-			return info
-
+			return self.info
 
 
 ## Comment below lines if use as independent module
@@ -354,4 +360,14 @@ if __name__ == '__main__':
 	t = read_config(config_file)
 	retrieve= t.read_raw_json()
 	print retrieve
+	print "------------------------------------------"
+	timestamp = int(time.time())
+	c_time = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+	print "Current Time: {}, UNIX Timestamp: {}".format(c_time, timestamp)
+	new_t = {"update":{}}
+	new_t["update"]["unix-timestamp"] = timestamp
+	new_t["update"]["timestamp"] = c_time
 
+	d = update_config(config_file)
+	update = d.update_json(new_t)
+	print update
