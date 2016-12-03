@@ -70,11 +70,11 @@ class read_config:
 			results['error'] = "empty keywords"
 			return results
 		else:
-			for i in range(len(keywords)):
+			for i in xrange(len(keywords)):
 				if keywords[i] == '':
 					results['error'] = "invalid keywords"
 					return results
-				elif type(keywords[i]) != type(self.path):
+				elif type(keywords[i]) != str:
 					print type(keywords[i])
 					results['error'] = "invalid type"
 					return results
@@ -91,16 +91,16 @@ class read_config:
 			with open(self.path,'r') as origin:
 				temp = json.load(origin)
 
-			for i in range(len(keywords)):
+			for i in xrange(len(keywords)):
 				if keywords[i] in temp:
 					print keywords[i]
-					if type(temp[keywords[i]]) == type(temp):
+					if type(temp[keywords[i]]) == dict:
 						print "check 2"
-						for n in range(len(keywords)):
+						for n in xrange(len(keywords)):
 							if keywords[n] in temp[keywords[i]]:
 								print "check 3:", n
-								if type(temp[keywords[i]][keywords[n]]) == type(temp):
-									for m in range(len(keywords)):
+								if type(temp[keywords[i]][keywords[n]]) == dict:
+									for m in xrange(len(keywords)):
 										print "check 4: ",m
 										if keywords[m] in temp[keywords[i]][keywords[n]]:
 											key_name = keywords[i]+'_'+keywords[n]+'_'+keywords[m]
@@ -227,11 +227,11 @@ class read_config:
 			else:
 				pass
 
-			for i in range (len(root)):
+			for i in xrange (len(root)):
 			#	print "No.{} Primary Key: {}".format(i, root[i].tag)
 				if (root[i].text).isspace():
 					sub_size = len(root[i])
-					for t in range (sub_size):
+					for t in xrange (sub_size):
 						temp = []
 					#	print ("Sub Key: {} , Value: {}").format(root[i][t].tag, root[i][t].text)
 						if t == 0 and (t+1) == sub_size:
@@ -316,7 +316,7 @@ class update_config:
 				return self.info
 			else:
 				for k in keywords.keys():
-					if type(keywords[k]) == type(self.info):
+					if type(keywords[k]) == dict:
 						keywords_keys2 = set(keywords[k].keys())
 						raw_keys2 = set(raw[k].keys())
 						if len(keywords_keys2 - raw_keys2) != 0:
