@@ -107,7 +107,7 @@ def on_disconnect(mqttc, userdata, rc):
 class node_message(threading.Thread):
 
 	msg_size_limit = 1000
-	user_quit = ["\q", "\Q", "\quit", "\Quit"]
+	user_quit = ["\q", "\Q", "\quit", "\Quit", "\exit"]
 
 	def __init__(self, thread_name, msg_queue, mqttc):
 		threading.Thread.__init__(self, name = thread_name)
@@ -148,7 +148,7 @@ class node_message(threading.Thread):
 					self.mqttc.loop_stop()
 					thread1_status = False
 					break
-					
+
 				elif check == 0:
 					print("-> Please Re-enter the Message:\n")
 					pass

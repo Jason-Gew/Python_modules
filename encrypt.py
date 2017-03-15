@@ -60,7 +60,7 @@ class XOR_encrypt:
 			decode = base64.b64decode(ciphertext)
 			ts = decode[-10:]
 		except TypeError:
-			print "Incorrect padding"
+			print "Incorrect Padding"
 			origin_timestamp = "invalid"
 			msg = "invalid"
 			return origin_timestamp, msg

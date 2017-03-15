@@ -354,20 +354,20 @@ class update_config:
 
 ## Comment below lines if use as independent module
 if __name__ == '__main__':
-	config_file = "file/sample_config.json"
+	config_file = "config.json"
 	retrieve = {}
 
 	t = read_config(config_file)
-	retrieve= t.read_raw_json()
+	retrieve = t.read_raw_json()
 	print retrieve
 	print "------------------------------------------"
-	timestamp = int(time.time())
-	c_time = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-	print "Current Time: {}, UNIX Timestamp: {}".format(c_time, timestamp)
-	new_t = {"update":{}}
-	new_t["update"]["unix-timestamp"] = timestamp
-	new_t["update"]["timestamp"] = c_time
+	# timestamp = int(time.time())
+	# c_time = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+	# print "Current Time: {}, UNIX Timestamp: {}".format(c_time, timestamp)
+	# new_t = {"update":{}}
+	# new_t["update"]["unix-timestamp"] = timestamp
+	# new_t["update"]["timestamp"] = c_time
 
-	d = update_config(config_file)
-	update = d.update_json(new_t)
-	print update
+	# d = update_config(config_file)
+	# update = d.update_json(new_t)
+	# print update
